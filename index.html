@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0d1b3e"/>
+  <title>IEEEXtreme 20.0 Egypt — Check-in</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #00629B;
+      --blue-dark: #004c7a;
+      --navy: #0d1b3e;
+      --ink: #14213d;
+      --muted: #5b6b85;
+      --bg: #eef2f8;
+      --card: #ffffff;
+      --line: #dbe3ef;
+      --green: #1f9d63;
+      --green-bg: #e3f6ec;
+      --amber: #d98200;
+      --amber-bg: #fff3d6;
+      --red: #d33a3a;
+      --red-bg: #fde8e8;
+      --attendee: #2d5a9b;
+      --ambassador: #3f8f46;
+      --proctor: #d37a2c;
+      --sac: #7b3fa0;
+      --radius: 16px;
+      --shadow: 0 4px 22px rgba(13,27,62,0.10);
+      --font: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    button { font-family: inherit; cursor: pointer; }
+    input { font-family: inherit; }
+
+    /* ───────── LOGIN ───────── */
+    #login-screen {
+      min-height: 100vh; min-height: 100dvh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      background: linear-gradient(160deg, var(--navy) 0%, #12306a 55%, var(--blue) 100%);
+    }
+    .login-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 34px 30px 28px;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .brand { text-align: center; }
+    .brand-title { font-size: 24px; font-weight: 800; color: var(--navy); letter-spacing: .3px; }
+    .brand-sub { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 3px; }
+    .brand-org { font-size: 11px; font-weight: 700; color: var(--blue); margin-top: 8px; text-transform: uppercase; letter-spacing: 1.2px; }
+    .login-card h2 { font-size: 17px; font-weight: 700; text-align: center; color: var(--ink); }
+    .field {
+      width: 100%; padding: 13px 16px;
+      border: 2px solid var(--line); border-radius: 12px;
+      font-size: 16px; outline: none; transition: border-color .15s;
+      background: #fff; color: var(--ink);
+    }
+    .field:focus { border-color: var(--blue); }
+    .btn {
+      width: 100%; padding: 14px;
+      background: var(--blue); color: #fff;
+      font-size: 16px; font-weight: 700;
+      border: none; border-radius: 12px;
+      transition: background .15s, transform .08s;
+    }
+    .btn:hover { background: var(--blue-dark); }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { background: #b9c4d6; cursor: not-allowed; }
+    .err-msg { color: var(--red); font-size: 13px; text-align: center; min-height: 18px; font-weight: 600; }
+    details.conn summary { font-size: 13px; color: var(--muted); cursor: pointer; font-weight: 600; text-align: center; list-style: none; }
+    details.conn summary::-webkit-details-marker { display: none; }
+    details.conn .field { margin-top: 10px; font-size: 13px; padding: 10px 12px; }
+    details.conn p { font-size: 11.5px; color: var(--muted); margin-top: 6px; text-align: center; line-height: 1.45; }
+
+    /* ───────── SCANNER SHELL ───────── */
+    #scanner-screen { display: none; min-height: 100vh; min-height: 100dvh; flex-direction: column; }
+
+    header.top {
+      background: var(--navy); color: #fff;
+      padding: 12px 16px;
+      padding-top: max(12px, env(safe-area-inset-top));
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      position: sticky; top: 0; z-index: 30;
+    }
+    header.top h1 { font-size: 17px; font-weight: 800; letter-spacing: .2px; }
+    .hsub { font-size: 11px; color: rgba(255,255,255,.65); margin-top: 2px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #5fd38f; display: inline-block; }
+    .dot.off { background: #ff7b7b; }
+    .hbtns { display: flex; gap: 6px; }
+    .icon-btn {
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+      color: #fff; border-radius: 10px; padding: 7px 11px; font-size: 14px; font-weight: 600;
+      transition: background .15s;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,.2); }
+
+    /* checkpoint chips */
+    .chips-wrap { background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 56px; z-index: 20; }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 14px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto; display: flex; align-items: center; gap: 7px;
+      padding: 9px 14px; border-radius: 999px;
+      border: 2px solid var(--line); background: #fff; color: var(--ink);
+      font-size: 14px; font-weight: 700; white-space: nowrap;
+      transition: all .12s;
+    }
+    .chip .em { font-size: 16px; }
+    .chip .cnt { font-size: 11.5px; font-weight: 700; background: #eaf0f9; color: var(--muted); padding: 2px 8px; border-radius: 999px; }
+    .chip.active { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 4px 14px rgba(0,98,155,.35); }
+    .chip.active .cnt { background: rgba(255,255,255,.22); color: #fff; }
+    .chip.full .cnt { background: var(--green-bg); color: var(--green); }
+    .chip.active.full .cnt { background: rgba(255,255,255,.28); color: #fff; }
+
+    .wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 14px 40px; display: flex; flex-direction: column; gap: 14px; }
+
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+
+    /* progress */
+    .prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .prog-title { font-size: 15px; font-weight: 800; color: var(--ink); }
+    .prog-num { font-size: 26px; font-weight: 800; color: var(--blue); line-height: 1; }
+    .prog-num small { font-size: 14px; color: var(--muted); font-weight: 700; }
+    .bar { height: 10px; border-radius: 999px; background: #e6edf7; overflow: hidden; margin: 12px 0 10px; }
+    .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), #2bb3e8); border-radius: 999px; transition: width .35s ease; }
+    .roles { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rpill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; color: #fff; }
+    .rpill.Attendee { background: var(--attendee); }
+    .rpill.Ambassador { background: var(--ambassador); }
+    .rpill.Proctor { background: var(--proctor); }
+    .rpill.SAC { background: var(--sac); }
+    .prog-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .ghost {
+      flex: 1; padding: 10px 12px; border-radius: 12px; font-size: 14px; font-weight: 700;
+      border: 2px solid var(--line); background: #fff; color: var(--ink); transition: all .12s;
+    }
+    .ghost:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* scan card */
+    .scan-label { font-size: 12px; font-weight: 800; letter-spacing: 1.4px; color: var(--muted); text-transform: uppercase; }
+    .scan-cp { font-size: 20px; font-weight: 800; margin: 2px 0 12px; color: var(--ink); }
+    .input-row { display: flex; gap: 8px; }
+    .ticket-input {
+      flex: 1; min-width: 0;
+      padding: 16px; font-size: 40px; font-weight: 800; letter-spacing: 8px;
+      text-align: center; color: var(--blue);
+      border: 3px solid var(--line); border-radius: 16px; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .ticket-input.text { font-size: 22px; letter-spacing: 0; font-weight: 700; text-align: left; }
+    .ticket-input:focus { border-color: var(--blue); box-shadow: 0 0 0 5px rgba(0,98,155,.12); }
+    .ticket-input::placeholder { color: #cfd8e6; letter-spacing: 6px; }
+    .ticket-input.text::placeholder { letter-spacing: 0; font-weight: 600; }
+    .mode-btn {
+      flex: 0 0 64px; border: 3px solid var(--line); border-radius: 16px; background: #fff;
+      font-size: 13px; font-weight: 800; color: var(--muted); line-height: 1.2; transition: all .12s;
+    }
+    .mode-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .mode-btn b { display: block; font-size: 18px; color: var(--ink); }
+
+    .toggles { display: flex; gap: 16px; margin: 12px 2px 4px; flex-wrap: wrap; }
+    .tog { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; user-select: none; }
+    .tog input { display: none; }
+    .sw { width: 38px; height: 22px; border-radius: 999px; background: #c9d3e3; position: relative; transition: background .15s; }
+    .sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+    .tog input:checked + .sw { background: var(--green); }
+    .tog input:checked + .sw::after { transform: translateX(16px); }
+
+    .suggest { display: none; margin-top: 10px; border: 2px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .suggest.show { display: block; }
+    .sg {
+      width: 100%; text-align: left; background: #fff; border: none; border-bottom: 1px solid var(--line);
+      padding: 11px 14px; display: flex; align-items: center; gap: 10px; font-size: 14.5px;
+    }
+    .sg:last-child { border-bottom: none; }
+    .sg:hover, .sg:focus { background: #f2f7fd; outline: none; }
+    .sg .sid { font-weight: 800; color: var(--blue); min-width: 38px; }
+    .sg .snm { flex: 1; font-weight: 600; }
+    .sg .smeta { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+    .preview { display: none; margin-top: 12px; border: 2px solid var(--line); border-radius: 14px; padding: 14px; background: #f8fbff; }
+    .preview.show { display: block; }
+    .pv-name { font-size: 20px; font-weight: 800; }
+    .pv-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+    .badge { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: #e8eef8; color: var(--ink); }
+    .badge.role { color: #fff; }
+    .badge.role.Attendee { background: var(--attendee); }
+    .badge.role.Ambassador { background: var(--ambassador); }
+    .badge.role.Proctor { background: var(--proctor); }
+    .badge.role.SAC { background: var(--sac); }
+    .badge.bus { background: var(--navy); color: #fff; font-size: 15px; padding: 6px 14px; }
+    .pv-status { margin-top: 10px; font-size: 14px; font-weight: 700; }
+    .pv-status.ok { color: var(--green); }
+    .pv-status.dup { color: var(--amber); }
+
+    .go {
+      width: 100%; margin-top: 12px; padding: 18px; border: none; border-radius: 16px;
+      background: var(--green); color: #fff; font-size: 19px; font-weight: 800;
+      box-shadow: 0 6px 18px rgba(31,157,99,.35); transition: transform .08s, background .15s;
+    }
+    .go:active { transform: scale(.98); }
+    .go:disabled { background: #b9c4d6; box-shadow: none; cursor: not-allowed; }
+
+    /* result banner */
+    .banner { display: none; border-radius: var(--radius); padding: 18px; border: 3px solid; animation: pop .18s ease; }
+    .banner.show { display: block; }
+    @keyframes pop { from { transform: scale(.96); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+    .banner.ok  { background: var(--green-bg); border-color: var(--green); }
+    .banner.dup { background: var(--amber-bg); border-color: var(--amber); }
+    .banner.err { background: var(--red-bg);   border-color: var(--red); }
+    .bn-head { display: flex; align-items: center; gap: 12px; }
+    .bn-ic { font-size: 40px; line-height: 1; }
+    .bn-title { font-size: 19px; font-weight: 800; }
+    .banner.ok .bn-title { color: var(--green); }
+    .banner.dup .bn-title { color: var(--amber); }
+    .banner.err .bn-title { color: var(--red); }
+    .bn-sub { font-size: 14.5px; color: #3a4963; margin-top: 2px; font-weight: 600; white-space: pre-line; }
+    .bn-person { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(0,0,0,.18); }
+    .bn-name { font-size: 22px; font-weight: 800; }
+    .bn-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+
+    /* log */
+    .sec-title { font-size: 12px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .sec-title button { background: none; border: none; color: var(--blue); font-weight: 800; font-size: 12px; }
+    .log { list-style: none; }
+    .log li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .log li:last-child { border-bottom: none; }
+    .l-ic { font-size: 18px; width: 24px; text-align: center; }
+    .l-main { flex: 1; min-width: 0; }
+    .l-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .l-sub { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .mini { border: 1.5px solid var(--line); background: #fff; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 800; color: var(--ink); }
+    .mini:hover { border-color: var(--red); color: var(--red); }
+    .mini.retry:hover { border-color: var(--blue); color: var(--blue); }
+    .empty { color: var(--muted); font-size: 13.5px; font-weight: 600; padding: 6px 0; }
+    .spin { display: inline-block; width: 16px; height: 16px; border: 3px solid #dbe5f3; border-top-color: var(--blue); border-radius: 50%; animation: sp .7s linear infinite; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+
+    /* drawer */
+    .overlay { position: fixed; inset: 0; background: rgba(8,16,40,.5); display: none; z-index: 60; align-items: flex-end; justify-content: center; }
+    .overlay.show { display: flex; }
+    .sheet {
+      background: #fff; width: 100%; max-width: 680px; max-height: 86vh; max-height: 86dvh;
+      border-radius: 22px 22px 0 0; display: flex; flex-direction: column;
+      animation: up .2s ease; box-shadow: 0 -10px 40px rgba(0,0,0,.25);
+    }
+    @keyframes up { from { transform: translateY(40px); opacity: .5; } to { transform: none; opacity: 1; } }
+    .sheet-h { padding: 16px 18px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .sheet-h h3 { font-size: 17px; font-weight: 800; }
+    .tabs { display: flex; gap: 8px; padding: 0 18px 10px; }
+    .tab { flex: 1; padding: 9px; border-radius: 10px; border: 2px solid var(--line); background: #fff; font-weight: 800; font-size: 13.5px; color: var(--muted); }
+    .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .sheet .field { margin: 0 18px 10px; width: calc(100% - 36px); padding: 11px 14px; font-size: 15px; }
+    .rows { overflow-y: auto; padding: 0 18px 22px; flex: 1; }
+    .prow { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+    .prow .pid { font-weight: 800; color: var(--blue); min-width: 38px; }
+    .prow .pmain { flex: 1; min-width: 0; }
+    .prow .pnm { font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prow .psub { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .prow .act { background: var(--green); color: #fff; border: none; border-radius: 9px; padding: 8px 12px; font-weight: 800; font-size: 13px; }
+    .prow .act.undo { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+    .prow .act.undo:hover { border-color: var(--red); color: var(--red); }
+
+    .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 11px 18px; border-radius: 12px; font-weight: 700; font-size: 14px; z-index: 90; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; text-align: center; }
+    .toast.show { opacity: 1; }
+
+    @media (min-width: 700px) {
+      .ticket-input { font-size: 48px; }
+      .wrap { padding-top: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-title">IEEEXtreme 20.0 Egypt</div>
+      <div class="brand-sub">Offline Competition · Check-in</div>
+      <div class="brand-org">IEEE Egypt SAC Team</div>
+    </div>
+    <h2>Admin Access</h2>
+    <input id="pass-input" class="field" type="password" placeholder="Passcode" autocomplete="off"/>
+    <details class="conn" id="conn">
+      <summary>⚙ Connection settings</summary>
+      <input id="url-input" class="field" type="url" placeholder="Paste your Web App URL (…/exec)" autocomplete="off"/>
+      <p>Paste the URL of the deployed Apps Script once. It is remembered on this device.</p>
+    </details>
+    <div class="err-msg" id="login-err"></div>
+    <button class="btn" id="login-btn">Login</button>
+  </div>
+</div>
+
+<!-- ══ SCANNER ══ -->
+<div id="scanner-screen">
+  <header class="top">
+    <div>
+      <h1>⚡ IEEEXtreme 20.0 Egypt</h1>
+      <div class="hsub"><span class="dot" id="net-dot"></span><span id="net-text">Connecting…</span></div>
+    </div>
+    <div class="hbtns">
+      <button class="icon-btn" id="sound-btn" title="Sound">🔊</button>
+      <button class="icon-btn" id="refresh-btn" title="Refresh list">⟳</button>
+      <button class="icon-btn" id="logout-btn">Logout</button>
+    </div>
+  </header>
+
+  <div class="chips-wrap"><div class="chips" id="chips"></div></div>
+
+  <div class="wrap">
+    <section class="card" id="progress-card">
+      <div class="prog-top">
+        <div class="prog-title" id="prog-title">Loading…</div>
+        <div class="prog-num" id="prog-num">–</div>
+      </div>
+      <div class="bar"><i id="prog-bar"></i></div>
+      <div class="roles" id="prog-roles"></div>
+      <div class="prog-actions">
+        <button class="ghost" id="open-pending">📋 Not yet</button>
+        <button class="ghost" id="open-done">✅ Checked in</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="scan-label">Scanning</div>
+      <div class="scan-cp" id="scan-cp">–</div>
+      <div class="input-row">
+        <input id="ticket-input" class="ticket-input" type="text" inputmode="numeric" placeholder="000" autocomplete="off" autocapitalize="off" spellcheck="false"/>
+        <button class="mode-btn" id="mode-btn" title="Switch between number pad and name search"><b>123</b>keypad</button>
+      </div>
+      <div class="toggles">
+        <label class="tog"><input type="checkbox" id="auto-toggle"><span class="sw"></span>⚡ Auto check-in at 3 digits</label>
+      </div>
+      <div class="suggest" id="suggest"></div>
+      <div class="preview" id="preview"></div>
+      <button class="go" id="go-btn" disabled>✅ CHECK IN</button>
+    </section>
+
+    <section class="banner" id="banner" role="status" aria-live="polite"></section>
+
+    <section class="card">
+      <div class="sec-title"><span>Recent scans</span><button id="clear-log">Clear</button></div>
+      <ul class="log" id="log"></ul>
+      <div class="empty" id="log-empty">No scans yet. Type a 3-digit ID to start.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ══ LIST DRAWER ══ -->
+<div class="overlay" id="drawer">
+  <div class="sheet">
+    <div class="sheet-h"><h3 id="drawer-title">–</h3><button class="icon-btn" style="background:#eef2f8;color:#14213d;border-color:#dbe3ef" id="drawer-close">✕</button></div>
+    <div class="tabs">
+      <button class="tab" id="tab-pending">Not yet</button>
+      <button class="tab" id="tab-done">Checked in</button>
+    </div>
+    <input class="field" id="drawer-search" placeholder="Search name, ID or team…" autocomplete="off"/>
+    <div class="rows" id="drawer-rows"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ═════════ CONFIG ═════════ */
+  // Optional: paste your deployed Apps Script Web App URL here.
+  // If you leave it empty, enter it once on the login screen (it is remembered on the device).
+  const SCRIPT_URL = "";
+  const PASSWORD   = "SAC3060";
+
+  // Order must match CHECKPOINTS in Code.gs
+  const CHECKPOINTS = [
+    { name: "Transportation Departure", short: "Departure", em: "🚌", bus: true  },
+    { name: "Kit",                      short: "Kit",       em: "🎒" },
+    { name: "Lunch 1",                  short: "Lunch 1",   em: "🍽️" },
+    { name: "Lunch 2",                  short: "Lunch 2",   em: "🍽️" },
+    { name: "Lunch 3",                  short: "Lunch 3",   em: "🍽️" },
+    { name: "Lab 1",                    short: "Lab 1",     em: "💻" },
+    { name: "Lab 2",                    short: "Lab 2",     em: "💻" },
+    { name: "Closing",                  short: "Closing",   em: "🏁" },
+    { name: "Transportation Return",    short: "Return",    em: "🚌", bus: true  }
+  ];
+
+  /* ═════════ STATE & HELPERS ═════════ */
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const pad3 = n => String(n).padStart(3, '0');
+  const normId = raw => { const d = String(raw || '').replace(/\D/g, ''); return d ? pad3(parseInt(d, 10)) : ''; };
+  const getUrl = () => (localStorage.getItem('xt_url') || SCRIPT_URL || '').trim();
+
+  let roster = [];
+  let byId = new Map();
+  let cp = Math.min(Math.max(parseInt(localStorage.getItem('xt_cp') || '0', 10) || 0, 0), CHECKPOINTS.length - 1);
+  let autoMode = localStorage.getItem('xt_auto') !== '0';
+  let soundOn = localStorage.getItem('xt_sound') !== '0';
+  let numericMode = true;
+  let pickedId = null;
+  let lastSync = 0;
+  let log = [];
+  let logSeq = 0;
+  let drawerTab = 'pending';
+  let loggedIn = false;
+  let refreshTimer = null;
+
+  /* ═════════ SOUND + HAPTICS ═════════ */
+  let actx = null;
+  function ensureAudio() {
+    try {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+    } catch (e) {}
+  }
+  function tone(freq, dur, type, delay, vol) {
+    if (!actx) return;
+    const t0 = actx.currentTime + (delay || 0);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.15, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function feedback(kind) {
+    if (navigator.vibrate) { try { navigator.vibrate(kind === 'ok' ? 40 : kind === 'dup' ? [60, 40, 60] : [220]); } catch (e) {} }
+    if (!soundOn) return;
+    ensureAudio();
+    if (kind === 'ok')       { tone(880, .12); tone(1320, .16, 'sine', .10); }
+    else if (kind === 'dup') { tone(440, .14, 'square', 0, .07); tone(440, .14, 'square', .2, .07); }
+    else                     { tone(170, .4, 'sawtooth', 0, .09); }
+  }
+
+  /* ═════════ NETWORK ═════════ */
+  async function api(params, timeout) {
+    const url = getUrl();
+    if (!url) throw new Error('No connection URL set');
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeout || 15000);
+    try {
+      const qs = new URLSearchParams(Object.assign({}, params, { key: PASSWORD }));
+      const res = await fetch(url + (url.includes('?') ? '&' : '?') + qs.toString(), { signal: ctrl.signal });
+      return await res.json();
+    } catch (e) {
+      throw new Error(e.name === 'AbortError' ? 'Request timed out' : 'Network error — check the connection');
+    } finally { clearTimeout(t); }
+  }
+
+  function setNet(ok, msg) {
+    $('net-dot').classList.toggle('off', !ok);
+    $('net-text').textContent = ok ? 'Synced ' + ago(lastSync) : (msg || 'Offline');
+  }
+  function ago(ts) {
+    if (!ts) return '–';
+    const s = Math.round((Date.now() - ts) / 1000);
+    return s < 5 ? 'just now' : s < 60 ? s + 's ago' : Math.round(s / 60) + 'm ago';
+  }
+
+  async function loadRoster(silent) {
+    try {
+      const d = await api({ action: 'roster' });
+      if (d.status !== 'success') throw new Error(d.message || 'Could not load the list');
+      roster = d.people || [];
+      byId = new Map(roster.map(p => [p.id, p]));
+      lastSync = Date.now();
+      setNet(true);
+      renderAll();
+    } catch (e) {
+      setNet(false, e.message);
+      if (!silent) toast('⚠ ' + e.message);
+    }
+  }
+
+  /* ═════════ RENDER ═════════ */
+  function doneCount(i, role) {
+    let n = 0;
+    for (const p of roster) if (p.scans && p.scans[i] && (!role || p.role === role)) n++;
+    return n;
+  }
+
+  function renderChips() {
+    $('chips').innerHTML = CHECKPOINTS.map((c, i) => {
+      const n = doneCount(i), full = roster.length && n === roster.length;
+      return `<button class="chip ${i === cp ? 'active' : ''} ${full ? 'full' : ''}" data-i="${i}" title="Alt+${i + 1}">
+        <span class="em">${c.em}</span>${esc(c.short)}<span class="cnt">${roster.length ? n + '/' + roster.length : '–'}</span></button>`;
+    }).join('');
+    const act = $('chips').querySelector('.chip.active');
+    if (act) act.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }
+
+  function renderProgress() {
+    const c = CHECKPOINTS[cp];
+    $('prog-title').textContent = c.em + ' ' + c.name;
+    $('scan-cp').textContent = c.em + ' ' + c.name;
+    if (!roster.length) {
+      $('prog-num').textContent = '–';
+      $('prog-bar').style.width = '0';
+      $('prog-roles').innerHTML = '<span class="empty">Loading the list…</span>';
+      return;
+    }
+    const n = doneCount(cp), t = roster.length;
+    $('prog-num').innerHTML = n + ' <small>/ ' + t + '</small>';
+    $('prog-bar').style.width = Math.round(n / t * 100) + '%';
+    const roles = ['Attendee', 'Ambassador', 'Proctor', 'SAC'];
+    $('prog-roles').innerHTML = roles.map(r => {
+      const tot = roster.filter(p => p.role === r).length;
+      return tot ? `<span class="rpill ${r}">${r === 'SAC' ? r : r + 's'} ${doneCount(cp, r)}/${tot}</span>` : '';
+    }).join('');
+  }
+
+  function renderLog() {
+    $('log-empty').style.display = log.length ? 'none' : 'block';
+    $('log').innerHTML = log.slice(0, 25).map(e => {
+      const ic = { pending: '<span class="spin"></span>', ok: '✅', dup: '⚠️', err: '❌', undone: '↩️' }[e.status];
+      const sub = e.status === 'pending' ? 'Checking…'
+        : e.status === 'ok' ? 'Checked in · ' + CHECKPOINTS[e.cp].short + ' · ' + e.time
+        : e.status === 'dup' ? 'Already scanned · ' + (e.ts || '')
+        : e.status === 'undone' ? 'Undone · ' + CHECKPOINTS[e.cp].short
+        : esc(e.msg || 'Error');
+      let btn = '';
+      if (e.status === 'ok') btn = `<button class="mini" data-undo="${e.seq}">Undo</button>`;
+      if (e.status === 'err' && e.retry) btn = `<button class="mini retry" data-retry="${e.seq}">Retry</button>`;
+      return `<li><span class="l-ic">${ic}</span><div class="l-main"><div class="l-name">#${esc(e.key)} · ${esc(e.name)}</div><div class="l-sub">${sub}</div></div>${btn}</li>`;
+    }).join('');
+  }
+
+  function renderAll() {
+    renderChips(); renderProgress(); renderLog(); updatePreview();
+    if ($('drawer').classList.contains('show')) renderDrawer();
+  }
+
+  function busBadge(p) {
+    if (!p || !p.transport || !CHECKPOINTS[cp].bus) return '';
+    return `<span class="badge bus">🚌 ${esc(p.transport)} bus</span>`;
+  }
+  function metaBadges(p) {
+    return `${p.role ? `<span class="badge role ${esc(p.role)}">${esc(p.role)}</span>` : ''}
+            ${p.team ? `<span class="badge">👥 ${esc(p.team)}</span>` : ''}
+            ${p.transport && !CHECKPOINTS[cp].bus ? `<span class="badge">🚌 ${esc(p.transport)}</span>` : ''}
+            ${busBadge(p)}`;
+  }
+
+  /* ═════════ INPUT, PREVIEW, SUGGESTIONS ═════════ */
+  function setMode(numeric) {
+    numericMode = numeric;
+    const inp = $('ticket-input');
+    inp.setAttribute('inputmode', numeric ? 'numeric' : 'text');
+    inp.placeholder = numeric ? '000' : 'Search name or team…';
+    inp.classList.toggle('text', !numeric);
+    $('mode-btn').innerHTML = numeric ? '<b>123</b>keypad' : '<b>Aa</b>name';
+    inp.blur(); setTimeout(() => inp.focus(), 30);
+  }
+
+  function resetInput() {
+    $('ticket-input').value = '';
+    pickedId = null;
+    updatePreview();
+    $('ticket-input').focus();
+  }
+
+  function updatePreview() {
+    const v = $('ticket-input').value.trim();
+    const pv = $('preview'), sg = $('suggest'), go = $('go-btn');
+    let target = null;
+    sg.classList.remove('show'); sg.innerHTML = '';
+
+    if (pickedId) target = byId.get(pickedId) || null;
+    else if (/^\d+$/.test(v)) {
+      if (v.length >= 3) target = byId.get(normId(v)) || null;
+      if (v.length >= 3 && !target && roster.length) {
+        pv.className = 'preview show';
+        pv.innerHTML = `<div class="pv-name" style="color:var(--red)">❌ Ticket #${esc(normId(v))} not found</div>`;
+        go.disabled = true; return;
+      }
+    } else if (v.length >= 2) {
+      const q = v.toLowerCase();
+      const hits = roster.filter(p => p.name.toLowerCase().includes(q) || (p.team || '').toLowerCase().includes(q)).slice(0, 6);
+      if (hits.length) {
+        sg.innerHTML = hits.map(p => `<button class="sg" data-pick="${p.id}"><span class="sid">${p.id}</span><span class="snm">${esc(p.name)}</span><span class="smeta">${esc(p.team || p.role)}</span></button>`).join('');
+        sg.classList.add('show');
+      } else {
+        sg.innerHTML = '<div class="sg"><span class="smeta">No match</span></div>'; sg.classList.add('show');
+      }
+    }
+
+    if (target) {
+      const scanned = target.scans && target.scans[cp];
+      pv.className = 'preview show';
+      pv.innerHTML = `<div class="pv-name">${esc(target.name)} <span style="color:var(--blue)">#${esc(target.id)}</span></div>
+        <div class="pv-meta">${metaBadges(target)}</div>
+        <div class="pv-status ${scanned ? 'dup' : 'ok'}">${scanned ? '⚠️ Already checked in · ' + esc(scanned) : '✔ Not checked in yet'}</div>`;
+      go.disabled = false;
+    } else {
+      pv.className = 'preview'; pv.innerHTML = '';
+      go.disabled = !(/^\d+$/.test(v) && v.length >= 1) ;
+    }
+  }
+
+  /* ═════════ CHECK-IN ═════════ */
+  const nowStr = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  function addLog(o) { const e = Object.assign({ seq: ++logSeq, time: nowStr() }, o); log.unshift(e); return e; }
+
+  function showBanner(kind, icon, title, sub, person) {
+    const b = $('banner');
+    b.className = 'banner show ' + kind;
+    b.innerHTML = `<div class="bn-head"><div class="bn-ic">${icon}</div><div><div class="bn-title">${esc(title)}</div>${sub ? `<div class="bn-sub">${esc(sub)}</div>` : ''}</div></div>` +
+      (person ? `<div class="bn-person"><div class="bn-name">${esc(person.name)} <span style="color:var(--blue)">#${esc(person.id || '')}</span></div><div class="bn-meta">${metaBadges(person)}</div></div>` : '');
+    b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
+  }
+
+  async function checkin(raw, idx) {
+    const key = normId(raw);
+    if (!key) return;
+    if (idx == null) idx = cp;
+    const person = byId.get(key) || null;
+    const cpName = CHECKPOINTS[idx].name;
+    resetInput();
+
+    if (roster.length && !person) {
+      feedback('err');
+      showBanner('err', '❌', 'Ticket #' + key + ' not found', 'Check the number and try again.');
+      addLog({ key, name: 'Unknown', cp: idx, status: 'err', msg: 'Not found' });
+      renderLog(); return;
+    }
+    if (person && person.scans && person.scans[idx]) {
+      feedback('dup');
+      showBanner('dup', '⚠️', 'Already checked in', cpName + '\n' + person.scans[idx], person);
+      addLog({ key, name: person.name, cp: idx, status: 'dup', ts: person.scans[idx] });
+      renderLog(); return;
+    }
+
+    const entry = addLog({ key, name: person ? person.name : 'Ticket', cp: idx, status: 'pending' });
+    renderLog();
+    try {
+      const d = await api({ action: 'scan', ticket_id: key, checkpoint_index: idx });
+      const p = Object.assign({}, person || {}, d.name ? { name: d.name, id: d.id || key, team: d.team, transport: d.transport, role: d.role } : { id: key });
+      if (d.status === 'success') {
+        entry.status = 'ok'; entry.name = d.name || entry.name; entry.ts = d.timestamp;
+        if (person) { person.scans[idx] = d.timestamp || nowStr(); }
+        feedback('ok');
+        showBanner('ok', '✅', 'Checked in', cpName, p);
+      } else if ((d.message || '').toUpperCase().includes('ALREADY')) {
+        entry.status = 'dup'; entry.ts = d.timestamp; entry.name = d.name || entry.name;
+        if (person) person.scans[idx] = d.timestamp || 'earlier';
+        feedback('dup');
+        showBanner('dup', '⚠️', 'Already checked in', cpName + '\n' + (d.timestamp || ''), p);
+      } else {
+        entry.status = 'err'; entry.msg = d.message || 'Unknown error';
+        feedback('err');
+        showBanner('err', '❌', 'Error', entry.msg);
+      }
+    } catch (e) {
+      entry.status = 'err'; entry.msg = e.message; entry.retry = true;
+      feedback('err');
+      showBanner('err', '📡', 'Not saved', e.message + '\nTap Retry in Recent scans.');
+      setNet(false, e.message);
+    }
+    renderAll();
+  }
+
+  async function undoScan(key, idx, seq) {
+    try {
+      const d = await api({ action: 'undo', ticket_id: key, checkpoint_index: idx });
+      if (d.status === 'success') {
+        const p = byId.get(key); if (p) p.scans[idx] = '';
+        const e = log.find(x => x.seq === seq); if (e) e.status = 'undone';
+        else addLog({ key, name: p ? p.name : 'Ticket', cp: idx, status: 'undone' });
+        toast('↩ Undone · #' + key);
+        renderAll();
+      } else toast('⚠ ' + (d.message || 'Could not undo'));
+    } catch (e) { toast('⚠ ' + e.message); }
+  }
+
+  /* ═════════ DRAWER (not yet / checked in) ═════════ */
+  function openDrawer(tab) { drawerTab = tab; $('drawer').classList.add('show'); $('drawer-search').value = ''; renderDrawer(); }
+  function renderDrawer() {
+    const c = CHECKPOINTS[cp];
+    $('drawer-title').textContent = c.em + ' ' + c.name;
+    $('tab-pending').classList.toggle('active', drawerTab === 'pending');
+    $('tab-done').classList.toggle('active', drawerTab === 'done');
+    const q = $('drawer-search').value.trim().toLowerCase();
+    let list = roster.filter(p => drawerTab === 'done' ? !!p.scans[cp] : !p.scans[cp]);
+    $('tab-pending').textContent = 'Not yet (' + roster.filter(p => !p.scans[cp]).length + ')';
+    $('tab-done').textContent = 'Checked in (' + roster.filter(p => p.scans[cp]).length + ')';
+    if (q) list = list.filter(p => (p.id + ' ' + p.name + ' ' + (p.team || '') + ' ' + p.role + ' ' + (p.transport || '')).toLowerCase().includes(q));
+    $('drawer-rows').innerHTML = list.length ? list.map(p => `
+      <div class="prow"><span class="pid">${p.id}</span>
+        <div class="pmain"><div class="pnm">${esc(p.name)}</div><div class="psub">${esc(p.role)}${p.team ? ' · ' + esc(p.team) : ''}${p.transport ? ' · ' + esc(p.transport) : ''}${drawerTab === 'done' ? ' · ' + esc(p.scans[cp]) : ''}</div></div>
+        ${drawerTab === 'done' ? `<button class="act undo" data-dundo="${p.id}">Undo</button>` : `<button class="act" data-dgo="${p.id}">Check in</button>`}
+      </div>`).join('') : '<div class="empty" style="padding:18px 0">Nothing here.</div>';
+  }
+
+  /* ═════════ UI WIRING ═════════ */
+  let toastTimer;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  function selectCp(i) {
+    cp = i; localStorage.setItem('xt_cp', i);
+    pickedId = null; $('banner').className = 'banner';
+    renderAll(); $('ticket-input').focus();
+  }
+
+  function doLogin() {
+    const err = $('login-err');
+    const url = $('url-input').value.trim();
+    if (url) localStorage.setItem('xt_url', url);
+    if ($('pass-input').value !== PASSWORD) {
+      err.textContent = '❌ Wrong passcode. Try again.'; $('pass-input').value = ''; return;
+    }
+    if (!getUrl()) {
+      err.textContent = 'Paste the Web App URL first.'; $('conn').open = true; $('url-input').focus(); return;
+    }
+    err.textContent = '';
+    loggedIn = true; ensureAudio();
+    $('login-screen').style.display = 'none';
+    $('scanner-screen').style.display = 'flex';
+    $('auto-toggle').checked = autoMode;
+    $('sound-btn').textContent = soundOn ? '🔊' : '🔇';
+    renderAll(); loadRoster();
+    clearInterval(refreshTimer);
+    refreshTimer = setInterval(() => { if (loggedIn && !document.hidden) loadRoster(true); }, 25000);
+    setInterval(() => { if (loggedIn && lastSync && $('net-dot') && !$('net-dot').classList.contains('off')) $('net-text').textContent = 'Synced ' + ago(lastSync); }, 5000);
+    $('ticket-input').focus();
+  }
+
+  function doLogout() {
+    loggedIn = false; clearInterval(refreshTimer);
+    $('login-screen').style.display = 'flex'; $('scanner-screen').style.display = 'none';
+    $('pass-input').value = ''; $('ticket-input').value = '';
+    $('pass-input').focus();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    $('url-input').value = localStorage.getItem('xt_url') || '';
+    if (!getUrl()) $('conn').open = true;
+    $('pass-input').focus();
+    $('pass-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    $('url-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    $('login-btn').addEventListener('click', doLogin);
+    $('logout-btn').addEventListener('click', doLogout);
+    $('refresh-btn').addEventListener('click', () => { toast('Refreshing…'); loadRoster(); });
+    $('sound-btn').addEventListener('click', () => {
+      soundOn = !soundOn; localStorage.setItem('xt_sound', soundOn ? '1' : '0');
+      $('sound-btn').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) feedback('ok');
+    });
+    $('mode-btn').addEventListener('click', () => setMode(!numericMode));
+    $('auto-toggle').addEventListener('change', e => { autoMode = e.target.checked; localStorage.setItem('xt_auto', autoMode ? '1' : '0'); $('ticket-input').focus(); });
+
+    $('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) selectCp(parseInt(b.dataset.i, 10)); });
+
+    const inp = $('ticket-input');
+    inp.addEventListener('input', () => {
+      pickedId = null;
+      const v = inp.value.trim();
+      updatePreview();
+      if (autoMode && /^\d{3}$/.test(v)) checkin(v);
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); submitFromInput(); }
+      else if (e.key === 'Escape') resetInput();
+    });
+    $('go-btn').addEventListener('click', submitFromInput);
+
+    $('suggest').addEventListener('click', e => {
+      const b = e.target.closest('[data-pick]'); if (!b) return;
+      pickedId = b.dataset.pick; inp.value = pickedId; updatePreview(); $('go-btn').focus();
+    });
+
+    $('log').addEventListener('click', e => {
+      const u = e.target.closest('[data-undo]'), r = e.target.closest('[data-retry]');
+      if (u) { const en = log.find(x => x.seq == u.dataset.undo); if (en) undoScan(en.key, en.cp, en.seq); inp.focus(); }
+      if (r) { const en = log.find(x => x.seq == r.dataset.retry); if (en) { log = log.filter(x => x !== en); checkin(en.key, en.cp); } }
+    });
+    $('clear-log').addEventListener('click', () => { log = []; renderLog(); });
+
+    $('open-pending').addEventListener('click', () => openDrawer('pending'));
+    $('open-done').addEventListener('click', () => openDrawer('done'));
+    $('drawer-close').addEventListener('click', () => { $('drawer').classList.remove('show'); inp.focus(); });
+    $('drawer').addEventListener('click', e => { if (e.target === $('drawer')) { $('drawer').classList.remove('show'); inp.focus(); } });
+    $('tab-pending').addEventListener('click', () => { drawerTab = 'pending'; renderDrawer(); });
+    $('tab-done').addEventListener('click', () => { drawerTab = 'done'; renderDrawer(); });
+    $('drawer-search').addEventListener('input', renderDrawer);
+    $('drawer-rows').addEventListener('click', e => {
+      const g = e.target.closest('[data-dgo]'), u = e.target.closest('[data-dundo]');
+      if (g) checkin(g.dataset.dgo);
+      if (u) undoScan(u.dataset.dundo, cp, 0);
+    });
+
+    document.addEventListener('keydown', e => {
+      if (!loggedIn) return;
+      if (e.altKey && /^[1-9]$/.test(e.key)) { e.preventDefault(); selectCp(parseInt(e.key, 10) - 1); }
+    });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && loggedIn) loadRoster(true); });
+  });
+
+  function submitFromInput() {
+    const v = $('ticket-input').value.trim();
+    if (pickedId) return checkin(pickedId);
+    if (/^\d+$/.test(v)) return checkin(v);
+    const first = $('suggest').querySelectorAll('[data-pick]');
+    if (first.length === 1) return checkin(first[0].dataset.pick);
+    if (first.length > 1) toast('Tap the right name from the list');
+  }
+</script>
+</body>
+</html>
