@@ -202,6 +202,7 @@
     .badge.role.Ambassador { background: var(--ambassador); }
     .badge.role.Proctor { background: var(--proctor); }
     .badge.role.SAC { background: var(--sac); }
+    .badge.size { background: #ffd23f; color: #14213d; font-size: 22px; font-weight: 900; padding: 6px 18px; border: 2px solid #14213d; }
     .badge.bus { background: var(--navy); color: #fff; font-size: 15px; padding: 6px 14px; }
     .pv-status { margin-top: 10px; font-size: 14px; font-weight: 700; }
     .pv-status.ok { color: var(--green); }
@@ -386,7 +387,7 @@
   // Order must match CHECKPOINTS in Code.gs
   const CHECKPOINTS = [
     { name: "Transportation Departure", short: "Departure", em: "🚌", bus: true  },
-    { name: "Kit",                      short: "Kit",       em: "🎒" },
+    { name: "Kit",                      short: "Kit",       em: "🎒", size: true },
     { name: "Lunch 1",                  short: "Lunch 1",   em: "🍽️" },
     { name: "Lunch 2",                  short: "Lunch 2",   em: "🍽️" },
     { name: "Lunch 3",                  short: "Lunch 3",   em: "🍽️" },
@@ -546,8 +547,13 @@
     if (!p || !p.transport || !CHECKPOINTS[cp].bus) return '';
     return `<span class="badge bus">🚌 ${esc(p.transport)} bus</span>`;
   }
+  function sizeBadge(p) {
+    if (!p || !CHECKPOINTS[cp].size) return '';
+    return `<span class="badge size">👕 ${p.tshirt ? esc(p.tshirt) : 'Size ?'}</span>`;
+  }
   function metaBadges(p) {
-    return `${p.role ? `<span class="badge role ${esc(p.role)}">${esc(p.role)}</span>` : ''}
+    return `${sizeBadge(p)}
+            ${p.role ? `<span class="badge role ${esc(p.role)}">${esc(p.role)}</span>` : ''}
             ${p.team ? `<span class="badge">👥 ${esc(p.team)}</span>` : ''}
             ${p.transport && !CHECKPOINTS[cp].bus ? `<span class="badge">🚌 ${esc(p.transport)}</span>` : ''}
             ${busBadge(p)}`;
@@ -647,7 +653,7 @@
     renderLog();
     try {
       const d = await api({ action: 'scan', ticket_id: key, checkpoint_index: idx });
-      const p = Object.assign({}, person || {}, d.name ? { name: d.name, id: d.id || key, team: d.team, transport: d.transport, role: d.role } : { id: key });
+      const p = Object.assign({}, person || {}, d.name ? { name: d.name, id: d.id || key, team: d.team, transport: d.transport, tshirt: d.tshirt, role: d.role } : { id: key });
       if (d.status === 'success') {
         entry.status = 'ok'; entry.name = d.name || entry.name; entry.ts = d.timestamp;
         if (person) { person.scans[idx] = d.timestamp || nowStr(); }
